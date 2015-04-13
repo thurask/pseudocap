@@ -181,7 +181,7 @@ def makeAutoloader(filename, cap, firstfile, secondfile="", thirdfile="", fourth
 						break
 					autoloader.write(chunk)
 		
-	print("\nAUTOLOADER FINISHED!\n")
+	print("\n", filename, "FINISHED!\n")
 	os.remove("offset.hex")
 		
 if __name__ == '__main__':
