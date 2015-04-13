@@ -23,7 +23,7 @@ def ghettoConvert(intsize):
 	ghettoHex = ghettoHex.rjust(16, '0')
 	return binascii.unhexlify(bytes(ghettoHex.upper(), 'ascii'))
 
-def makeOffset(cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifthfile="", sixthfile=""):
+def makeOffset(cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifthfile="", sixthfile="", folder=os.getcwd()):
 	filecount = 0
 	filelist = [firstfile, secondfile, thirdfile, fourthfile, fifthfile, sixthfile]
 	for i in filelist:
@@ -78,7 +78,7 @@ def makeOffset(cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifth
 		sixthoffset = fifthoffset + fifthsize  # start of sixth file
 		sixthstart = ghettoConvert(sixthoffset)
 		
-	with open("offset.hex", "w+b") as file:
+	with open(os.path.join(folder, "offset.hex"), "w+b") as file:
 		file.write(separator)
 		file.write(password)
 		file.write(filepad)
@@ -113,76 +113,102 @@ def makeOffset(cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifth
 		file.write(doublepad)
 		file.write(trailers)
 		
-def makeAutoloader(filename, cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifthfile="", sixthfile=""):
-	makeOffset(cap, firstfile, secondfile, thirdfile, fourthfile, fifthfile, sixthfile)
+def makeAutoloader(filename, cap, firstfile, secondfile="", thirdfile="", fourthfile="", fifthfile="", sixthfile="", folder=os.getcwd()):
+	makeOffset(cap, firstfile, secondfile, thirdfile, fourthfile, fifthfile, sixthfile, folder)
 	
 	filecount = 0
 	filelist = [firstfile, secondfile, thirdfile, fourthfile, fifthfile, sixthfile]
 	for i in filelist:
 		if i:
 			filecount += 1
-	
-	with open(filename, "w+b") as autoloader:
-		with open(cap, "rb") as capfile:
-			print("WRITING CAP.EXE...")
-			while True:
-				chunk = capfile.read(4096)  # 4k chunks
-				if not chunk:
-					break
-				autoloader.write(chunk)
-		with open("offset.hex", "rb") as offset:
-			print("WRITING MAGIC OFFSET...")
-			autoloader.write(offset.read())
-		with open(firstfile, "rb") as first:
-			print("WRITING SIGNED FILE #1...\n", firstfile)
-			while True:
-				chunk = first.read(4096)  # 4k chunks
-				if not chunk:
-					break
-				autoloader.write(chunk)
-		if (filecount >= 2):
-			print("WRITING SIGNED FILE #2...\n", secondfile)
-			with open(secondfile, "rb") as second:
-				while True:
-					chunk = second.read(4096)  # 4k chunks
-					if not chunk:
-						break
-					autoloader.write(chunk)
-		if (filecount >= 3):
-			print("WRITING SIGNED FILE #3...\n", thirdfile)
-			with open(thirdfile, "rb") as third:
-				while True:
-					chunk = third.read(4096)  # 4k chunks
-					if not chunk:
-						break
-					autoloader.write(chunk)
-		if (filecount >= 4):
-			print("WRITING SIGNED FILE #5...\n", fourthfile)
-			with open(fourthfile, "rb") as fourth:
-				while True:
-					chunk = fourth.read(4096)  # 4k chunks
-					if not chunk:
-						break
-					autoloader.write(chunk)
-		if (filecount >= 5):
-			print("WRITING SIGNED FILE #5...\n", fifthfile)
-			with open(fifthfile, "rb") as fifth:
-				while True:
-					chunk = fifth.read(4096)  # 4k chunks
-					if not chunk:
-						break
-					autoloader.write(chunk)
-		if (filecount == 6):
-			print("WRITING SIGNED FILE #6...\n", sixthfile)
-			with open(sixthfile, "rb") as sixth:
-				while True:
-					chunk = sixth.read(4096)  # 4k chunks
-					if not chunk:
-						break
-					autoloader.write(chunk)
+	try:
+		with open(os.path.join(os.path.abspath(folder), filename), "wb") as autoloader:
+			try:
+				with open(os.path.normpath(cap), "rb") as capfile:
+					print("WRITING CAP.EXE...")
+					while True:
+						chunk = capfile.read(4096)  # 4k chunks
+						if not chunk:
+							break
+						autoloader.write(chunk)
+			except IOError as e:
+				print("Operation failed:", e.strerror)
+			try:
+				with open(os.path.join(folder, "offset.hex"), "rb") as offset:
+					print("WRITING MAGIC OFFSET...")
+					autoloader.write(offset.read())
+			except IOError as e:
+				print("Operation failed:", e.strerror)
+			try:
+				with open(firstfile, "rb") as first:
+					print("WRITING SIGNED FILE #1...\n", firstfile)
+					while True:
+						chunk = first.read(4096)  # 4k chunks
+						if not chunk:
+							break
+						autoloader.write(chunk)
+			except IOError as e:
+				print("Operation failed:", e.strerror)
+			if (filecount >= 2):
+				try:
+					print("WRITING SIGNED FILE #2...\n", secondfile)
+					with open(secondfile, "rb") as second:
+						while True:
+							chunk = second.read(4096)  # 4k chunks
+							if not chunk:
+								break
+							autoloader.write(chunk)
+				except IOError as e:
+					print("Operation failed:", e.strerror)
+			if (filecount >= 3):
+				try:
+					print("WRITING SIGNED FILE #3...\n", thirdfile)
+					with open(thirdfile, "rb") as third:
+						while True:
+							chunk = third.read(4096)  # 4k chunks
+							if not chunk:
+								break
+							autoloader.write(chunk)
+				except IOError as e:
+					print("Operation failed:", e.strerror)
+			if (filecount >= 4):
+				try:
+					print("WRITING SIGNED FILE #5...\n", fourthfile)
+					with open(fourthfile, "rb") as fourth:
+						while True:
+							chunk = fourth.read(4096)  # 4k chunks
+							if not chunk:
+								break
+							autoloader.write(chunk)
+				except IOError as e:
+					print("Operation failed:", e.strerror)
+			if (filecount >= 5):
+				try:
+					print("WRITING SIGNED FILE #5...\n", fifthfile)
+					with open(fifthfile, "rb") as fifth:
+						while True:
+							chunk = fifth.read(4096)  # 4k chunks
+							if not chunk:
+								break
+							autoloader.write(chunk)
+				except IOError as e:
+					print("Operation failed:", e.strerror)
+			if (filecount == 6):
+				try:
+					print("WRITING SIGNED FILE #6...\n", sixthfile)
+					with open(sixthfile, "rb") as sixth:
+						while True:
+							chunk = sixth.read(4096)  # 4k chunks
+							if not chunk:
+								break
+							autoloader.write(chunk)
+				except IOError as e:
+					print("Operation failed:", e.strerror)
+	except IOError as e:
+		print("Operation failed:", e.strerror)
 		
-	print("\n", filename, "FINISHED!\n")
-	os.remove("offset.hex")
+	print(filename, "FINISHED!\n")
+	os.remove(os.path.join(folder, "offset.hex"))
 		
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="CAP, but cross-platform", usage="%(prog)s FILENAME CAP FIRSTFILE [optional files]", epilog="http://github.com/thurask/pseudocap")
